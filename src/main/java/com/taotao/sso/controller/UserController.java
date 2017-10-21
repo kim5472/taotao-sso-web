@@ -60,5 +60,13 @@ public class UserController {
 		return result;
 	}
 	
+	@RequestMapping(value="/user/token/{token}",method=RequestMethod.GET)
+	@ResponseBody
+	public TaotaoResult getUserByToken(@PathVariable String token){
+		TaotaoResult result = userService.getUserByToken(token);
+		return result;
+		
+	}
+	
 
 }
