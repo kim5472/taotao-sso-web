@@ -65,8 +65,20 @@ public class UserController {
 	public TaotaoResult getUserByToken(@PathVariable String token){
 		TaotaoResult result = userService.getUserByToken(token);
 		return result;
-		
 	}
+	
+	@RequestMapping(value="/user/logout/{token}",method=RequestMethod.GET)
+	@ResponseBody
+	public TaotaoResult logout(
+			@PathVariable String token,
+			HttpServletRequest request,
+			HttpServletResponse response){
+	
+		TaotaoResult result = userService.logout(token);
+		CookieUtils.deleteCookie(request, response, TOKEN_KEY);
+		return result;
+	}
+	
 	
 
 }
