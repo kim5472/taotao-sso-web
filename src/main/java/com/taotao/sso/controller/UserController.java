@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -68,7 +69,7 @@ public class UserController {
 		
 		return result;
 	}
-	
+	/* jsonp第一种方法
 	@RequestMapping(
 			value="/user/token/{token}",
 			method=RequestMethod.GET,
@@ -86,6 +87,28 @@ public class UserController {
 		}
 		return JsonUtils.objectToJson(result);
 	}
+	*/
+	
+	// jsonp的 第二种方法，spring4.1以上版本使用
+	@RequestMapping(
+			value="/user/token/{token}",
+			method=RequestMethod.GET)
+	@ResponseBody
+	public Object getUserByToken(
+			@PathVariable String token,
+			String callback){
+		TaotaoResult result = userService.getUserByToken(token);
+		// 判断是否为jsonp请求
+		if (StringUtils.isNoneBlank(callback)) {
+			// 把数据包装进入MappingJacksonValue的构造方法
+			MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(result);
+			// 设置回调方法
+			mappingJacksonValue.setJsonpFunction(callback);
+			return mappingJacksonValue;
+		}
+		return result;
+	}
+	
 	
 	@RequestMapping(value="/user/logout/{token}",method=RequestMethod.GET)
 	@ResponseBody
