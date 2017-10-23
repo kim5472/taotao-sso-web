@@ -1,8 +1,13 @@
 package com.taotao.sso.controller;
 
+import java.awt.PageAttributes.MediaType;
+
+import javax.print.attribute.standard.Media;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.netty.util.internal.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -12,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.taotao.common.utils.CookieUtils;
+import com.taotao.common.utils.JsonUtils;
 import com.taotao.common.utils.TaotaoResult;
 import com.taotao.pojo.TbUser;
 import com.taotao.sso.service.UserService;
@@ -54,17 +60,31 @@ public class UserController {
 			HttpServletRequest request,
 			HttpServletResponse response){
 		TaotaoResult result = userService.login(username, password);
-		// 把token写入cookie
-		CookieUtils.setCookie(request, response, TOKEN_KEY, result.getData().toString());
+		// 登录成功后写cookie
+		if (result.getStatus()==200) {
+			// 把token写入cookie
+			CookieUtils.setCookie(request, response, TOKEN_KEY, result.getData().toString());
+		}
 		
 		return result;
 	}
 	
-	@RequestMapping(value="/user/token/{token}",method=RequestMethod.GET)
+	@RequestMapping(
+			value="/user/token/{token}",
+			method=RequestMethod.GET,
+			//指定响应数据的content-type
+			produces=org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE)
+			//produces = "application/json")
 	@ResponseBody
-	public TaotaoResult getUserByToken(@PathVariable String token){
+	public String getUserByToken(
+			@PathVariable String token,
+			String callback){
 		TaotaoResult result = userService.getUserByToken(token);
-		return result;
+		// 判断是否为jsonp请求
+		if (StringUtils.isNoneBlank(callback)) {
+			return callback+"("+JsonUtils.objectToJson(result)+");";
+		}
+		return JsonUtils.objectToJson(result);
 	}
 	
 	@RequestMapping(value="/user/logout/{token}",method=RequestMethod.GET)
